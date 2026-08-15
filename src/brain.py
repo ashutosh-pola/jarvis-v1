@@ -104,12 +104,15 @@ class DualBrainRouter:
                     # Handle tool call if returned by model
                     tool_calls = msg.get("tool_calls", [])
                     if tool_calls:
+                        res_list = []
                         for tool_call in tool_calls:
                             fn = tool_call.get("function", {})
                             fn_name = fn.get("name", "")
                             fn_args = fn.get("arguments", {})
                             tool_res = execute_tool(fn_name, fn_args)
-                            return tool_res.get("message") or f"Executed tool {fn_name}"
+                            msg_str = tool_res.get("message") or f"Executed tool {fn_name}"
+                            res_list.append(msg_str)
+                        return ". ".join(res_list)
 
                     if content:
                         return content
@@ -120,16 +123,30 @@ class DualBrainRouter:
         return self._rule_based_fallback(prompt)
 
 
-    def _check_fast_rule_action(self, prompt: str) -> str:
-        """Fast offline rule matcher for instant response to common mac commands."""
+    def _check_single_fast_rule(self, prompt: str) -> str:
+        """Match a single offline command phrase."""
         lower = prompt.lower().strip()
         
         # Volume controls
-        vol_match = re.search(r'set volume (?:to )?(\d+)', lower)
+        vol_match = re.search(r'(?:set volume|volume)(?: to)? (\d+)', lower)
         if vol_match:
             level = int(vol_match.group(1))
             res = execute_tool("set_volume", {"level": level})
             return res.get("message", f"Volume set to {level}%")
+
+        if any(kw in lower for kw in ["lower volume", "reduce volume", "decrease volume", "turn down volume", "volume down"]):
+            vol_res = execute_tool("get_volume", {})
+            current = vol_res.get("volume", 50)
+            new_vol = max(0, current - 15)
+            res = execute_tool("set_volume", {"level": new_vol})
+            return res.get("message", f"System volume set to {new_vol}%")
+
+        if any(kw in lower for kw in ["increase volume", "raise volume", "turn up volume", "volume up"]):
+            vol_res = execute_tool("get_volume", {})
+            current = vol_res.get("volume", 50)
+            new_vol = min(100, current + 15)
+            res = execute_tool("set_volume", {"level": new_vol})
+            return res.get("message", f"System volume set to {new_vol}%")
 
         if lower in ["mute", "mute volume"]:
             res = execute_tool("set_volume", {"level": 0})
@@ -143,7 +160,30 @@ class DualBrainRouter:
                 res = execute_tool("open_app", {"app_name": app_name})
                 return res.get("message", f"Opening {app_name}")
 
+        # Quit App commands
+        quit_match = re.search(r'^(?:quit|close|stop)\s+([a-zA-Z0-9\s]+)$', lower)
+        if quit_match:
+            app_name = quit_match.group(1).strip()
+            res = execute_tool("quit_app", {"app_name": app_name})
+            return res.get("message", f"Quit {app_name}")
+
         return ""
+
+    def _check_fast_rule_action(self, prompt: str) -> str:
+        """Fast offline rule matcher for instant response to common mac commands, supporting multi-command chains."""
+        # Check multi-step command connected by 'and', 'then', or ';'
+        parts = re.split(r'\s+(?:and|then)\s+|;\s*', prompt, flags=re.IGNORECASE)
+        if len(parts) > 1:
+            results = []
+            for part in parts:
+                part_res = self._check_single_fast_rule(part)
+                if part_res:
+                    results.append(part_res)
+            if len(results) == len(parts):
+                return ". ".join(results)
+
+        # Check single command
+        return self._check_single_fast_rule(prompt)
 
     def _rule_based_fallback(self, prompt: str) -> str:
         """Graceful offline fallback response when local LLM server is starting or offline."""
