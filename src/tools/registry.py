@@ -3,6 +3,7 @@ from typing import Dict, Any, List
 from src.tools.system import open_app, quit_app, set_volume, get_volume, run_shell_command
 from src.tools.browser import open_google_search
 from src.tools.filesystem import search_files, read_file_content
+from src.tools.research import perform_deep_research
 
 logger = logging.getLogger("jarvis.tools.registry")
 
@@ -75,6 +76,20 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "perform_deep_research",
+            "description": "Perform deep web research on a topic, synthesize key findings, and save a full markdown report.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "topic": {"type": "string", "description": "The topic or query to research"}
+                },
+                "required": ["topic"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "search_files",
             "description": "Search for files in user folders matching a keyword.",
             "parameters": {
@@ -131,6 +146,8 @@ def execute_tool(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
         return get_volume()
     elif name == "open_google_search":
         return open_google_search(args.get("query", ""))
+    elif name == "perform_deep_research":
+        return perform_deep_research(args.get("topic", ""))
     elif name == "search_files":
         return search_files(args.get("keyword", ""), args.get("base_folder", "Documents"))
     elif name == "read_file_content":

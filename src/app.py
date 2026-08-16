@@ -132,3 +132,4 @@ class JarvisApp(rumps.App):
         if self.hotkey_listener:
             self.hotkey_listener.stop()
         rumps.quit_application()
+        

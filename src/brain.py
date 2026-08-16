@@ -17,7 +17,7 @@ Role & Instructions:
 1. Be friendly, conversational, and direct.
 2. Discuss TV shows, pop culture, fiction, hobbies, coding, and general knowledge freely.
 3. When users ask about fictional devices or TV lore (e.g. Rick and Morty's Butter Bot), answer conversationally about the TV show lore and fun DIY prop projects. Never issue safety refusals for fictional or pop-culture topics.
-4. Keep responses concise, engaging, and ready for vocal speech synthesis. Do not use emojis in your responses.
+4. Keep responses concise, engaging, and clear for vocal speech synthesis. Do not use emojis in your responses.
 5. When requested to open apps, control volume, or search files, state or execute the action cleanly.
 """
 
@@ -44,7 +44,7 @@ class DualBrainRouter:
         return False, "Ollama unreachable"
 
     def process_query(self, user_input: str) -> str:
-        """Route user query to browser action or local Gemma brain."""
+        """Route user query to browser action, deep research engine, or local Gemma brain."""
         prompt = user_input.strip()
         if not prompt:
             return "I didn't catch that. How can I help you?"
@@ -52,7 +52,16 @@ class DualBrainRouter:
         # Save user message to memory
         memory.add_message("user", prompt)
 
-        # 1. Intent Category: Browser Search Command ("search [X]" / "google [X]")
+        # 1. Intent Category: Deep Research & Essay Writing ("deep research [X]", "write an essay on [X]", "make a report on [X]")
+        research_match = re.match(r'^(?:deep research|do deep research on|thoroughly research|deep dive into|research|make a research report on|make a report on|write a report on|write an essay on|essay on)\s+(.+)$', prompt, re.IGNORECASE)
+        if research_match:
+            topic = research_match.group(1).strip()
+            res = execute_tool("perform_deep_research", {"topic": topic})
+            reply = res.get("spoken_summary") or res.get("message")
+            memory.add_message("assistant", reply)
+            return reply
+
+        # 2. Intent Category: Browser Search Command ("search [X]" / "google [X]")
         search_match = re.match(r'^(?:search|google|look up on google|search for)\s+(.+)$', prompt, re.IGNORECASE)
         if search_match:
             query = search_match.group(1).strip()
@@ -61,7 +70,7 @@ class DualBrainRouter:
             memory.add_message("assistant", reply)
             return reply
 
-        # 2. Intent Category: Local Gemma Brain
+        # 3. Intent Category: Local Gemma Brain
         reply = self._query_local_gemma(prompt)
 
         memory.add_message("assistant", reply)
@@ -121,7 +130,6 @@ class DualBrainRouter:
 
         # Fallback if Ollama is slow/offline
         return self._rule_based_fallback(prompt)
-
 
     def _check_single_fast_rule(self, prompt: str) -> str:
         """Match a single offline command phrase."""

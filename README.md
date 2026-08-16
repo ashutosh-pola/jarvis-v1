@@ -14,13 +14,14 @@ Jarvis features a **Local-First Architecture**:
 1. **Global Hotkey Trigger**: Press `Cmd+Shift+J` anytime to activate voice dictation.
 2. **Native Speech-to-Text (STT)**: Fast, low-memory dictation powered by compiled native Swift binary leveraging macOS Speech Framework.
 3. **Native Text-to-Speech (TTS)**: Clean voice responses using macOS built-in `/usr/bin/say`.
-4. **Direct Browser Search Commands**: Saying `"search [query]"` or `"google [query]"` immediately opens your default browser to Google Search results for the query while speaking confirmation.
-5. **Local Mac Automation**:
+4. **Deep Web Research & Report Generator**: Saying `"deep research [topic]"` or `"write a report on [topic]"` searches multiple sources (DuckDuckGo & Wikipedia), synthesizes structured Markdown reports, and saves them to `~/Documents/Jarvis_Research/`.
+5. **Direct Browser Search Commands**: Saying `"search [query]"` or `"google [query]"` immediately opens your default browser to Google Search results for the query while speaking confirmation.
+6. **Local Mac Automation**:
    - Open/Quit Applications (e.g., `"open Safari"`, `"open Notes"`)
    - Volume Control (e.g., `"set volume to 50%"`, `"mute"`)
    - File Search & Content Reader (searches `Documents`, `Desktop`, `Downloads`)
    - Diagnostic System Info (`"date"`, `"uptime"`, `"sw_vers"`, etc.)
-6. **Persistent Session Memory**: Rolling conversation history stored in SQLite (`~/.jarvis/memory.db`).
+7. **Persistent Session Memory**: Rolling conversation history stored in SQLite (`~/.jarvis/memory.db`).
 
 ---
 
@@ -31,8 +32,10 @@ jarvis v1/
 ├── config.py                 # System configuration & safety parameters
 ├── main.py                   # Main entry point for menu bar app
 ├── requirements.txt          # Python dependencies
+├── LICENSE                   # MIT License
 ├── native/
-│   └── stt_helper.swift      # Swift source for macOS native speech recognizer tool
+│   ├── stt_helper            # Precompiled Swift binary for macOS Speech Framework
+│   └── stt_helper.swift      # Swift source for native speech recognizer tool
 ├── src/
 │   ├── app.py                # rumps Menu Bar App UI & lifecycle manager
 │   ├── brain.py               # AI Router (Ollama Gemma)
@@ -44,6 +47,7 @@ jarvis v1/
 │   │   ├── system.py
 │   │   ├── browser.py
 │   │   ├── filesystem.py
+│   │   ├── research.py       # Deep research multi-source search engine & synthesizer
 │   │   └── registry.py
 │   └── utils/
 │       └── hotkey.py          # Global hotkey trigger listener (pynput)
@@ -62,6 +66,12 @@ Install Python dependencies:
 
 ```bash
 pip install -r requirements.txt
+```
+
+*(Optional)* Compile native Swift STT helper for your Mac architecture:
+
+```bash
+swiftc native/stt_helper.swift -o native/stt_helper -framework Speech -framework AVFoundation -framework Foundation
 ```
 
 ### 2. Setting Up Ollama (Local Brain)
@@ -105,3 +115,4 @@ To run the automated unit test suite:
 ```bash
 python -m unittest discover tests
 ```
+
