@@ -76,7 +76,7 @@ class JarvisApp(rumps.App):
                 self.is_processing = False
                 return
 
-            # Step 2: Query Dual-Brain Router
+            # Step 2: Query Brain Router
             self._process_text_request(text_or_err)
 
         except Exception as e:

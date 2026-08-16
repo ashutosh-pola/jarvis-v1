@@ -21,7 +21,7 @@ Role & Instructions:
 5. When requested to open apps, control volume, or search files, state or execute the action cleanly.
 """
 
-class DualBrainRouter:
+class BrainRouter:
     """AI Router: Local Gemma via Ollama."""
 
     def __init__(self, ollama_host: str = OLLAMA_HOST, local_model: str = LOCAL_MODEL):
@@ -211,4 +211,5 @@ class DualBrainRouter:
         return "I heard you, but my local reasoning model (Ollama Gemma) is taking longer than expected to respond. Please try asking again."
 
 # Global brain router instance
-brain = DualBrainRouter()
+brain = BrainRouter()
+DualBrainRouter = BrainRouter  # Backwards compatibility alias
