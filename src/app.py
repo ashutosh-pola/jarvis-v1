@@ -2,6 +2,7 @@ import threading
 import logging
 import rumps
 from typing import Optional
+from PyObjCTools import AppHelper
 
 from config import DEFAULT_HOTKEY, LOCAL_MODEL
 from src.listener import listener
@@ -62,7 +63,7 @@ class JarvisApp(rumps.App):
     def _listen_and_respond_flow(self):
         """Execute STT -> Brain Router -> TTS pipeline."""
         try:
-            self.set_status("[Listening...]")
+            AppHelper.callAfter(self.set_status, "[Listening...]")
             tts.speak("Listening...", async_mode=True)
             
             # Step 1: Capture speech using native STT helper
@@ -70,18 +71,18 @@ class JarvisApp(rumps.App):
             
             if not success:
                 logger.info(f"Speech capture result: {text_or_err}")
-                self.set_status("")
+                AppHelper.callAfter(self.set_status, "")
                 if "No speech recognized" not in text_or_err:
                     tts.speak(f"Sorry, {text_or_err}")
                 self.is_processing = False
                 return
 
-            # Step 2: Query Dual-Brain Router
+            # Step 2: Query Brain Router
             self._process_text_request(text_or_err)
 
         except Exception as e:
             logger.error(f"Error in listen and respond flow: {e}")
-            self.set_status("")
+            AppHelper.callAfter(self.set_status, "")
             self.is_processing = False
 
     @rumps.clicked("Type Request...")
@@ -97,31 +98,36 @@ class JarvisApp(rumps.App):
         """Send prompt to brain and speak/display response."""
         self.is_processing = True
         try:
-            self.set_status("[Thinking...]")
+            AppHelper.callAfter(self.set_status, "[Thinking...]")
             logger.info(f"User Request: {user_text}")
 
             # Get brain response
             reply = brain.process_query(user_text)
             logger.info(f"Jarvis Response: {reply}")
 
-            self.set_status("[Speaking...]")
+            AppHelper.callAfter(self.set_status, "[Speaking...]")
             tts.speak(reply, async_mode=False)
 
         except Exception as e:
             logger.error(f"Error processing query: {e}")
             tts.speak("An error occurred processing your request.")
         finally:
-            self.set_status("")
+            AppHelper.callAfter(self.set_status, "")
             self.is_processing = False
+
+    def _do_check_status(self):
+        """Perform status check in background thread and show alert on main thread."""
+        online, msg = brain.check_ollama_status()
+        if online:
+            alert_msg = f"{msg}"
+        else:
+            alert_msg = f"{msg}\n\nTo start Ollama, run 'ollama serve' in Terminal and pull {LOCAL_MODEL}."
+        AppHelper.callAfter(rumps.alert, title="Ollama Status", message=alert_msg)
 
     @rumps.clicked("Ollama Status")
     def on_check_status_clicked(self, _):
-        """Check Ollama local server connectivity."""
-        online, msg = brain.check_ollama_status()
-        if online:
-            rumps.alert("Ollama Status", f"{msg}")
-        else:
-            rumps.alert("Ollama Status", f"{msg}\n\nTo start Ollama, run 'ollama serve' in Terminal and pull {LOCAL_MODEL}.")
+        """Check Ollama local server connectivity in background thread."""
+        threading.Thread(target=self._do_check_status, daemon=True).start()
 
     @rumps.clicked("Clear Conversation History")
     def on_clear_history_clicked(self, _):

@@ -38,5 +38,14 @@ class TestJarvisTools(unittest.TestCase):
         self.assertTrue(res["success"])
         self.assertIn("https://www.google.com/search?q=best%20pizza%20near%20me", res["url"])
 
+    def test_ollama_host_normalization(self):
+        from config import normalize_ollama_host
+        self.assertEqual(normalize_ollama_host("http://localhost:11434"), "http://localhost:11434")
+        self.assertEqual(normalize_ollama_host("192.168.67.1"), "http://192.168.67.1:11434")
+        self.assertEqual(normalize_ollama_host("localhost"), "http://localhost:11434")
+        self.assertEqual(normalize_ollama_host("http://192.168.1.50"), "http://192.168.1.50:11434")
+        self.assertEqual(normalize_ollama_host("https://ollama.internal:8443"), "https://ollama.internal:8443")
+        self.assertEqual(normalize_ollama_host(""), "http://localhost:11434")
+
 if __name__ == "__main__":
     unittest.main()

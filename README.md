@@ -1,5 +1,7 @@
 # Jarvis — macOS AI Assistant
 
+> **Note**: Intel Macs only (`x86_64`). Not currently supported on Apple Silicon / `arm64` (packaged binary and bundled `flac-mac` STT helper are `x86_64`-only).
+
 A lightweight, local-first AI assistant in your macOS menu bar. Powered by Ollama (`gemma:2b`) and native macOS speech tools.
 
 ---

@@ -23,8 +23,23 @@ for env_name in [".env", ".env.example"]:
         except Exception:
             pass
 
+def normalize_ollama_host(url: str) -> str:
+    """Normalize OLLAMA_HOST URL to ensure proper scheme (http://) and port (:11434)."""
+    url = url.strip() if url else ""
+    if not url:
+        return "http://localhost:11434"
+    if not (url.startswith("http://") or url.startswith("https://")):
+        url = f"http://{url}"
+    
+    scheme, rest = url.split("://", 1)
+    host_part = rest.split("/")[0]
+    if ":" not in host_part:
+        path_part = rest[len(host_part):]
+        url = f"{scheme}://{host_part}:11434{path_part}"
+    return url
+
 # Brain Settings
-OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+OLLAMA_HOST = normalize_ollama_host(os.getenv("OLLAMA_HOST", "http://localhost:11434"))
 LOCAL_MODEL = os.getenv("JARVIS_LOCAL_MODEL", "gemma:2b")
 
 # Hotkey Trigger (pynput format)
