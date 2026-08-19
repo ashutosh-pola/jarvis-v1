@@ -1,9 +1,10 @@
 import unittest
 from pathlib import Path
 from src.tools.security import is_command_safe, is_path_safe
-from src.tools.system import set_volume, get_volume, run_shell_command
-from src.tools.browser import open_google_search
-from src.tools.filesystem import search_files, read_file_content
+from src.tools.os_tools import (
+    set_volume, get_volume, run_shell_command,
+    open_google_search, search_files, read_file_content,
+)
 
 class TestJarvisTools(unittest.TestCase):
 

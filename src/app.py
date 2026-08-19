@@ -45,7 +45,6 @@ class JarvisApp(rumps.App):
         self.hotkey_listener.start()
 
     def set_status(self, text: str):
-        """Update menu bar title indicator."""
         self.title = f"Jarvis {text}".strip()
 
     @rumps.clicked("Listen (Cmd+Shift+J)")
@@ -53,15 +52,13 @@ class JarvisApp(rumps.App):
         self.trigger_listening()
 
     def trigger_listening(self):
-        """Trigger voice input flow in a background thread."""
         if self.is_processing:
-            return
-        
+            return  # already mid-request, ignore the extra hotkey press
+
         self.is_processing = True
         threading.Thread(target=self._listen_and_respond_flow, daemon=True).start()
 
     def _listen_and_respond_flow(self):
-        """Execute STT -> Brain Router -> TTS pipeline."""
         try:
             AppHelper.callAfter(self.set_status, "[Listening...]")
             tts.speak("Listening...", async_mode=True)
@@ -87,7 +84,6 @@ class JarvisApp(rumps.App):
 
     @rumps.clicked("Type Request...")
     def on_type_request_clicked(self, _):
-        """Open text input prompt modal."""
         window = rumps.Window("Enter your command or question for Jarvis:", "Type Request", cancel=True, dimensions=(320, 80))
         response = window.run()
         if response.clicked and response.text.strip():
@@ -95,13 +91,11 @@ class JarvisApp(rumps.App):
             threading.Thread(target=self._process_text_request, args=(user_text,), daemon=True).start()
 
     def _process_text_request(self, user_text: str):
-        """Send prompt to brain and speak/display response."""
         self.is_processing = True
         try:
             AppHelper.callAfter(self.set_status, "[Thinking...]")
             logger.info(f"User Request: {user_text}")
 
-            # Get brain response
             reply = brain.process_query(user_text)
             logger.info(f"Jarvis Response: {reply}")
 

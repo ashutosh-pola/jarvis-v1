@@ -1,8 +1,9 @@
 import logging
 from typing import Dict, Any, List
-from src.tools.system import open_app, quit_app, set_volume, get_volume, run_shell_command
-from src.tools.browser import open_google_search
-from src.tools.filesystem import search_files, read_file_content
+from src.tools.os_tools import (
+    open_app, quit_app, set_volume, get_volume, run_shell_command,
+    open_google_search, search_files, read_file_content,
+)
 from src.tools.research import perform_deep_research
 
 logger = logging.getLogger("jarvis.tools.registry")
