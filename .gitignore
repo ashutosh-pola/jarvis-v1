@@ -34,3 +34,6 @@ ENV/
 
 # Build & native binary artifacts (optional - uncomment if building locally)
 # native/stt_helper
+/build/Jarvis
+dist/Jarvis
+dist/Jarvis-macOS.zip
