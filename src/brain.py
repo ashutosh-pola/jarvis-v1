@@ -16,9 +16,15 @@ SYSTEM_PROMPT = """You are Jarvis, a helpful, witty, and intelligent personal AI
 Role & Instructions:
 1. Be friendly, conversational, and direct.
 2. Discuss TV shows, pop culture, fiction, hobbies, coding, and general knowledge freely.
-3. If someone asks about stuff from a movie/show (like Rick and Morty's Butter Bot), just talk about it normally - it's fiction, no need to get weird about it.
+3. You have access to local macOS tools and capabilities:
+   - Volume control (set_volume, get_volume, mute).
+   - Application controls (open_app, quit_app).
+   - System diagnostics (uptime, disk space df, macOS sw_vers, network ping).
+   - Deep research & essay generation (perform_deep_research saved to ~/Documents/Jarvis_Research/).
+   - Web browser search (open_google_search).
+   - File search and text file reading in user directories.
 4. Keep responses concise, engaging, and clear for vocal speech synthesis. Do not use emojis in your responses.
-5. When requested to open apps, control volume, or search files, state or execute the action cleanly.
+5. When requested to perform actions, answer directly or execute tool calls cleanly.
 """
 
 class BrainRouter:
@@ -94,7 +100,7 @@ class BrainRouter:
                 "stream": False,
                 "options": {
                     "temperature": 0.7,
-                    "num_predict": 256
+                    "num_predict": 180
                 }
             }
             
@@ -104,7 +110,8 @@ class BrainRouter:
                 headers={"Content-Type": "application/json"}
             )
 
-            with urllib.request.urlopen(req, timeout=60.0) as resp:
+            # Allow up to 180 seconds for deep reasoning on CPU
+            with urllib.request.urlopen(req, timeout=180.0) as resp:
                 if resp.status == 200:
                     data = json.loads(resp.read().decode('utf-8'))
                     msg = data.get("message", {})
@@ -134,7 +141,7 @@ class BrainRouter:
     def _check_single_fast_rule(self, prompt: str) -> str:
         """Match a single offline command phrase."""
         lower = prompt.lower().strip()
-        
+
         # Volume controls
         vol_match = re.search(r'(?:set volume|volume)(?: to)? (\d+)', lower)
         if vol_match:
