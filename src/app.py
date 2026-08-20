@@ -4,6 +4,11 @@ import rumps
 from typing import Optional
 from PyObjCTools import AppHelper
 
+try:
+    from AppKit import NSApp
+except ImportError:
+    NSApp = None
+
 from config import DEFAULT_HOTKEY, LOCAL_MODEL
 from src.listener import listener
 from src.brain import brain
@@ -12,6 +17,14 @@ from src.memory import memory
 from src.utils.hotkey import GlobalHotkeyListener
 
 logger = logging.getLogger("jarvis.app")
+
+def bring_app_to_front():
+    """Ensure AppKit activates window focus so modal inputs gain keyboard focus."""
+    if NSApp is not None:
+        try:
+            NSApp.activateIgnoringOtherApps_(True)
+        except Exception as e:
+            logger.debug(f"Failed to activate AppKit focus: {e}")
 
 class JarvisApp(rumps.App):
     """Lightweight macOS Menu Bar Application for Jarvis Assistant."""
@@ -53,7 +66,7 @@ class JarvisApp(rumps.App):
 
     def trigger_listening(self):
         if self.is_processing:
-            return  # already mid-request, ignore the extra hotkey press
+            return  # mid-request, ignore extra trigger
 
         self.is_processing = True
         threading.Thread(target=self._listen_and_respond_flow, daemon=True).start()
@@ -63,7 +76,7 @@ class JarvisApp(rumps.App):
             AppHelper.callAfter(self.set_status, "[Listening...]")
             tts.speak("Listening...", async_mode=True)
             
-            # Step 1: Capture speech using native STT helper
+            # Capture speech using native STT helper
             success, text_or_err = listener.listen(max_seconds=10.0, silence_timeout=1.8)
             
             if not success:
@@ -74,7 +87,7 @@ class JarvisApp(rumps.App):
                 self.is_processing = False
                 return
 
-            # Step 2: Query Brain Router
+            # Query Brain Router
             self._process_text_request(text_or_err)
 
         except Exception as e:
@@ -84,6 +97,7 @@ class JarvisApp(rumps.App):
 
     @rumps.clicked("Type Request...")
     def on_type_request_clicked(self, _):
+        bring_app_to_front()
         window = rumps.Window("Enter your command or question for Jarvis:", "Type Request", cancel=True, dimensions=(320, 80))
         response = window.run()
         if response.clicked and response.text.strip():
@@ -116,6 +130,8 @@ class JarvisApp(rumps.App):
             alert_msg = f"{msg}"
         else:
             alert_msg = f"{msg}\n\nTo start Ollama, run 'ollama serve' in Terminal and pull {LOCAL_MODEL}."
+        
+        AppHelper.callAfter(bring_app_to_front)
         AppHelper.callAfter(rumps.alert, title="Ollama Status", message=alert_msg)
 
     @rumps.clicked("Ollama Status")
@@ -126,10 +142,10 @@ class JarvisApp(rumps.App):
     @rumps.clicked("Clear Conversation History")
     def on_clear_history_clicked(self, _):
         memory.clear_history()
+        bring_app_to_front()
         rumps.notification("Jarvis Memory", "Conversation History Cleared", "Memory database reset.")
 
     def on_quit_clicked(self, _):
         if self.hotkey_listener:
             self.hotkey_listener.stop()
         rumps.quit_application()
-        
