@@ -1,19 +1,33 @@
-# Jarvis — macOS AI Assistant
+# Jarvis
 
-> **Note**: Intel Macs only (`x86_64`). Not currently supported on Apple Silicon / `arm64` (packaged binary and bundled `flac-mac` STT helper are `x86_64`-only).
+> **Apple Silicon (M-chip) Note**: Running from source (`python main.py`) works natively on both Apple Silicon (M1–M4) and Intel Macs.
 
-A lightweight, local-first AI assistant in your macOS menu bar. Powered by Ollama (`gemma:2b`) and native macOS speech tools.
+A simple macOS menu bar assistant built to handle basic voice controls, local LLM queries, and web research without sending data to external servers or paying for API keys.
+
+Powered by **Ollama** (`gemma:2b`) and native macOS speech tools.
 
 ---
 
-## Quick Setup
+## Features
 
-### 1. Install Dependencies
+- **Voice dictation**: Hit `Cmd + Shift + J` anywhere to start talking.
+- **System controls**: Change volume, open/quit apps, and check system diagnostics (`uptime`, `df`, `ping`).
+- **Deep research & essays**: Say *"deep research [topic]"* or *"write an essay on [topic]"* to save a Markdown report to `~/Documents/Jarvis_Research/`.
+- **Quick web search**: Say *"search [query]"* to open Google search results in your default browser.
+- **100% offline**: All model inference and chat history stay local on your Mac.
+
+---
+
+## Getting Started
+
+### 1. Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Install & Start Ollama
+### 2. Ollama
+
 ```bash
 brew install ollama
 ollama serve
@@ -21,24 +35,9 @@ ollama pull gemma:2b
 ```
 
 ### 3. Run Jarvis
+
 ```bash
 python main.py
 ```
 
-Look for the **Jarvis** icon in your menu bar!
-
----
-
-## Usage
-
-- **Hotkey**: Press `Cmd + Shift + J` to start voice dictation.
-- **Menu Bar**: Click the icon to **Listen**, **Type Request**, or access settings.
-
----
-
-## Features
-
-- **Voice Commands**: Control volume, open/quit apps, or run diagnostic commands.
-- **Deep Research**: Say `"deep research [topic]"` to generate a Markdown report saved to `~/Documents/Jarvis_Research/`.
-- **Browser Search**: Say `"search [query]"` to open search results instantly.
-- **Local & Private**: Runs locally on your Mac with zero API costs.
+*Grant Accessibility (global hotkey) and Microphone permissions when prompted on first run.*
