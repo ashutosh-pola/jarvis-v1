@@ -1,117 +1,86 @@
-# Jarvis
+# Jarvis — macOS AI Assistant
 
-> **Apple Silicon (M-chip) Note**: Running from source (`python main.py`) works natively on both Apple Silicon (M1–M4) and Intel Macs.
+I wanted to make my own JARVIS-style assistant for my Mac, so I built one.
 
-A lightweight, local-first AI assistant in your macOS menu bar. Powered by Ollama (`gemma:2b`) and native macOS speech tools. Everything runs on-device — no cloud API, no accounts, no data leaving your Mac.
+Jarvis lives in the macOS menu bar and lets me talk to it or type commands. The AI runs locally using Ollama, so I don't need a paid API or have to send my prompts to a cloud AI service.
 
-## Platform support
+## What it can do
 
-**Packaged app (`dist/Jarvis`): Intel Macs only (`x86_64`).**
+*  Voice input using macOS speech tools
+*  Text input from the menu bar
+*  Cmd + Shift + J global hotkey
+*  Local AI using Ollama + gemma:2b
+*  Control system volume
+*  Open and quit apps
+*  Run basic system checks like uptime, disk space and ping
+*  Quickly search the web
+*  Run deeper research on a topic and save the results as a Markdown file
+*  Generate essays and save them to a folder in Documents
 
-The compiled executable and the bundled STT helper (`flac-mac`, shipped inside the `speech_recognition` library) are both `x86_64`-only. On Apple Silicon (M1/M2/M3/M4) this will fail to launch with a `bad CPU type in executable` error.
+## How it works
 
-**If you're on Apple Silicon, you have two options:**
+The main idea is pretty simple:
 
-1. **Enable Rosetta** and run the packaged app as-is:
-   ```bash
-   softwareupdate --install-rosetta
-   ```
-   Once installed, `dist/Jarvis` runs fine under emulation — no other changes needed.
+**You → Jarvis → Ollama → Gemma → Response**
 
-2. **Run from source instead** (recommended — no Rosetta needed, native performance):
-   ```bash
-   uv venv
-   source .venv/bin/activate
-   uv pip install -r requirements.txt
-   python main.py
-   ```
+Most of the processing happens locally on the Mac. Ollama handles the model, while Python handles the menu bar app, commands, hotkey and the rest of the logic.
 
----
+## Running it
 
-## Features
+### 1. Set up the Python environment
 
-- **Voice dictation**: Hit `Cmd + Shift + J` anywhere to start talking.
-- **System controls**: Change volume, open/quit apps, and check system diagnostics (`uptime`, `df`, `ping`).
-- **Deep research & essays**: Say *"deep research [topic]"* or *"write an essay on [topic]"* to save a Markdown report to `~/Documents/Jarvis_Research/`.
-- **Quick web search**: Say *"search [query]"* to open Google search results in your default browser.
-- **100% offline**: All model inference and chat history stay local on your Mac.
 
----
-
-## Getting Started
-
-### 1. Dependencies
-
-### 1. Install dependencies
-```bash
 uv venv
 source .venv/bin/activate
 uv pip install -r requirements.txt
-```
 
-### 2. Install & start Ollama
-```bash
+
+### 2. Install and start Ollama
+
+
 brew install ollama
 ollama serve
 ollama pull gemma:2b
-```
 
-### 3. Run Jarvis
 
-```bash
+### 3. Start Jarvis
+
+
 python main.py
-```
 
-Look for the **Jarvis** icon in your menu bar.
 
-### 4. First-launch permissions
+You should see the Jarvis icon appear in the macOS menu bar.
 
-macOS will likely prompt for two permissions the first time you use certain features:
-- **Accessibility** — needed for the global hotkey (`Cmd+Shift+J`) to register system-wide. Grant it under System Settings → Privacy & Security → Accessibility.
-- **Microphone** — needed for voice input (Listen).
+## Intel & Apple Silicon
 
-If you're running the packaged binary (not from source) and macOS refuses to open it at all, clear the quarantine flag first:
-```bash
-xattr -dr com.apple.quarantine Jarvis
-```
+The Python version works on both Intel Macs and Apple Silicon Macs (M1–M4).
 
----
+The pre-built version in `dist/Jarvis` and the bundled flac-mac speech-to-text helper are currently x86_64, so Apple Silicon Macs need Rosetta for the compiled version.
 
-## Usage
-
-- **Hotkey**: Press `Cmd + Shift + J` to start voice dictation.
-- **Menu Bar**: Click the icon to **Listen**, **Type Request**, check **Ollama Status**, or **Clear Conversation History**.
-
----
-
-## Features
-
-- **Voice commands** — control volume, open/quit apps, run diagnostic commands
-- **Deep research** — say "deep research [topic]" to generate a Markdown report saved to `~/Documents/Jarvis_Research/`
-- **Browser search** — say "search [query]" to open search results instantly
-- **Local & private** — runs entirely on your Mac, zero API costs, nothing leaves the device
-
----
-
-## Building the executable yourself
-
-If you want to rebuild `dist/Jarvis` after making changes:
+If needed:
 
 ```bash
-rm -rf build dist
-python3 -m PyInstaller --noconfirm Jarvis.spec
+softwareupdate --install-rosetta
 ```
 
-Wait for it to finish (watch for `Building EXE from EXE-00.toc completed successfully.`), then verify:
-```bash
-file dist/Jarvis
-```
-Should report `Mach-O 64-bit x86_64 executable` (this build is Intel-only — see Platform Support above).
+Running main.py directly is recommended if you're on Apple Silicon.
 
----
+## macOS permissions
 
-## Known limitations
+The first time you run Jarvis, macOS should ask for:
 
-- Apple Silicon Macs need Rosetta or must run from source (see Platform Support)
-- `run_shell_command` is restricted to a fixed allowlist of safe, read-only commands (`date`, `uptime`, `df`, `ls`, `ping`, etc.) — this is intentional, not a bug
-- File access is sandboxed to `~/Documents`, `~/Desktop`, and `~/Downloads`
+* **Accessibility** — needed for the global Cmd + Shift + J hotkey
+* **Microphone** — needed for voice input
+
+## Files
+
+Research and essay output is saved here:
+
+~/Documents/Jarvis_Research/
+
+
+## Why I made it
+
+I didn't want another assistant that needed an API key for everything. I wanted something small that could actually interact with my Mac while keeping the AI part local.
+
+There's still a lot I want to improve, but this is a good starting point for my own little JARVIS.
