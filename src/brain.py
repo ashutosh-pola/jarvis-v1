@@ -58,8 +58,12 @@ class BrainRouter:
         # Save user message to memory
         memory.add_message("user", prompt)
 
-        # 1. Intent Category: Deep Research & Essay Writing ("deep research [X]", "write an essay on [X]", "make a report on [X]")
-        research_match = re.match(r'^(?:deep research|do deep research on|thoroughly research|deep dive into|research|make a research report on|make a report on|write a report on|write an essay on|essay on)\s+(.+)$', prompt, re.IGNORECASE)
+        # 1. Intent Category: Deep Research & Essay Writing ("do research on [X]", "research on [X]", "deep research [X]", "write an essay on [X]", "make a report on [X]")
+        research_match = re.match(
+            r'^(?:deep research|do deep research on|do research on|research on|thoroughly research|deep dive into|research|make a research report on|make a report on|write a report on|write an essay on|write an essay about|essay on|essay about|find info on|get info on)\s+(.+)$',
+            prompt,
+            re.IGNORECASE
+        )
         if research_match:
             topic = research_match.group(1).strip()
             res = execute_tool("perform_deep_research", {"topic": topic})
