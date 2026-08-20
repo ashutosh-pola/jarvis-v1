@@ -53,7 +53,7 @@ You should see the Jarvis icon appear in the macOS menu bar.
 
 ## Intel & Apple Silicon
 
-The Python version works on both Intel Macs and Apple Silicon Macs (M1–M4).
+The Python version runs fine on both chips, though voice input specifically has a known issue on Apple Silicon due to a bundled helper tool
 
 The pre-built version in `dist/Jarvis` and the bundled flac-mac speech-to-text helper are currently x86_64, so Apple Silicon Macs need Rosetta for the compiled version.
 
