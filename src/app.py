@@ -5,9 +5,11 @@ from typing import Optional
 from PyObjCTools import AppHelper
 
 try:
-    from AppKit import NSApp
+    from AppKit import NSApp, NSApplicationActivationPolicyRegular, NSApplicationActivationPolicyAccessory
 except ImportError:
     NSApp = None
+    NSApplicationActivationPolicyRegular = None
+    NSApplicationActivationPolicyAccessory = None
 
 from config import DEFAULT_HOTKEY, LOCAL_MODEL
 from src.listener import listener
@@ -97,9 +99,17 @@ class JarvisApp(rumps.App):
 
     @rumps.clicked("Type Request...")
     def on_type_request_clicked(self, _):
-        bring_app_to_front()
-        window = rumps.Window("Enter your command or question for Jarvis:", "Type Request", cancel=True, dimensions=(320, 80))
-        response = window.run()
+        if NSApp is not None:
+            NSApp.setActivationPolicy_(NSApplicationActivationPolicyRegular)
+            NSApp.activateIgnoringOtherApps_(True)
+
+        try:
+            window = rumps.Window("Enter your command or question for Jarvis:", "Type Request", cancel=True, dimensions=(320, 80))
+            response = window.run()
+        finally:
+            if NSApp is not None:
+                NSApp.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
+
         if response.clicked and response.text.strip():
             user_text = response.text.strip()
             threading.Thread(target=self._process_text_request, args=(user_text,), daemon=True).start()
